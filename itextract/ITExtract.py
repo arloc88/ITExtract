@@ -6,7 +6,7 @@ regex2 = r"""
 	"""
 '''
 regex = r"(?s)((if\s).*?(then).+?(?=else|if)|(else).+?(\n))"
-test_str = readDocx.getText('4 FR VF179.docx')
+test_str = readDocx.getText('prova.docx')
 
 
 matches = re.finditer(regex, test_str, re.IGNORECASE | re.VERBOSE | re.MULTILINE)
