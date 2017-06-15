@@ -1,51 +1,69 @@
 from docx import Document
-from docx.enum.text import WD_COLOR_INDEX
 import readDocx
 import re
+from tkinter import *
+from tkinter import filedialog
+from tkinter import messagebox
 
-# regolar expression usata
+#regolar expression usata
 regex = r"(?s)((if\s).*?(then).+?(?=else|if)|(else).+?(\n))"
 
-# nome del file su cu si vuole applicare l'estrazione
-filedocx = 'prova.docx'
+root = Tk(className="ITExtract")
+#foo = Label(root, text=" Benvenuto in ITExtract", ) # add a label to root window
+root.geometry("640x640")
 
-# trasformo il testo da docx a testo trattabile e applico la regex
-test_str = readDocx.getText(filedocx)
-print('Il documento analizzato contiene %d caratteri' % (len(test_str)))
-matches = re.finditer(regex, test_str, re.IGNORECASE | re.VERBOSE | re.MULTILINE)
+fname=Canvas (height=400, width=600)
+fname.pack(side=TOP)
+logo = PhotoImage(file="Itextractlogo.jpg")
+image = fname.create_image(300,200,anchor=CENTER, image=logo)
+fname.pack()
 
-# costruttore docx
-doc = Document(filedocx)
+def act(): # defines an event function - for click of button
+    filedocx = filedialog.askopenfilename()
 
-size = 0
-# ciclo for che tramite regex mi individua il costrutto if then else
-for matchNum, match in enumerate(matches):
-    matchNum = matchNum + 1
+    # trasformo il testo da docx a testo trattabile e applico la regex
+    test_str = readDocx.getText(filedocx)
+    lenght = len(test_str)
+    print('Il documento analizzato contiene %d caratteri' % lenght)
+    matches = re.finditer(regex, test_str, re.IGNORECASE | re.VERBOSE | re.MULTILINE)
 
-    print("\n ********************** Match {matchNum} was found at {start}-{end} **********************: "
-          "\n {match}".format(matchNum=matchNum, start=match.start(), end=match.end(), match=match.group()))
+    # costruttore docx
+    doc = Document()
+    doc.add_heading('Result', 0)
+    size = 0
 
-    # ogni estrazione viene evidenziata ed aggiunta al file originario
-    # search_word = match.group()
-    p = doc.add_paragraph(match.group())
-    font = p.add_run(match.group()).font
-    font.highlight_color = WD_COLOR_INDEX.YELLOW
-    # print(test_str.replace(search_word, '\033[44;33m{}\033[m'.format(search_word)))
+    # ciclo for che tramite regex mi individua il costrutto if then else
+    for matchNum, match in enumerate(matches):
+        matchNum = matchNum + 1
 
-    # calcolo dell'estrazione parziale e aggiornamento dell'estrazione totale
-    lengroup = (match.end() - match.start())
-    print("\n Match lungo %d caratteri" % lengroup)
-    size = size + lengroup
-    print("\n In totale sono stati estratti %d caratteri " % size)
+        m = ("\n ********************** Match {matchNum} was found at {start}-{end} **********************: "
+             "\n {match}".format(matchNum=matchNum, start=match.start(), end=match.end(), match=match.group()))
+        # print(m.encode("utf-8"))
 
-# file di output
-doc.save('Highlight.docx')
+        # calcolo dell'estrazione parziale e aggiornamento dell'estrazione totale
+        lengroup = (match.end() - match.start())
+        print("\n Match lungo %d caratteri" % lengroup)
+        size = size + lengroup
+        print("\n In totale sono stati estratti %d caratteri " % size)
+        percent = size / lenght * 100
+        print("\n Percentuale di documento analizzata %s per cento" % round(percent, 2))
 
-'''
-    #informazione sui match e sui gruppi
-    for groupNum in range(0, len(match.groups())):
-        groupNum = groupNum + 1
+        # scrittura su file docx di output
+        doc.add_paragraph(m)
+        # font = p.add_run(match.group()).font
 
-        print (" \n  \t ==>info: Group {groupNum} found at {start}-{end}:'{group}'".format(groupNum=groupNum, 
-        start=match.start(groupNum), end=match.end(groupNum), group=match.group(groupNum)))
-'''
+    # file di output
+    doc.add_heading('Stats', 0)
+    doc.add_paragraph('Il documento analizzato contiene %d caratteri' % (len(test_str)))
+    doc.add_paragraph('In totale sono stati estratti %d caratteri' % size)
+    doc.add_paragraph('Percentuale del documento trattata: %s ' % round(percent, 2))
+
+    messagebox.showwarning(message='Analisi completata con successo, ora scegli il file di output')
+    filename = filedialog.asksaveasfilename(defaultextension=" .docx ", filetypes=[('word files', ' .docx ')])
+    doc.save(filename)
+    messagebox.showinfo(message='Salvataggio effettuato')
+
+b = Button(None,text="Scegli il file di Input",command=act,) # create & configure widget 'button"
+b.place(relx=0.5, rely=0.5, anchor=CENTER)
+#foo.pack()
+root.mainloop()
